@@ -1,5 +1,5 @@
 name: pokemon_2025
-description: "A new Flutter project."
+description: "Pokemon Pokedex App"
 publish_to: 'none'
 version: 0.1.0
 
@@ -15,9 +15,11 @@ dependencies:
   go_router: ^16.2.4
   google_fonts: ^6.2.1
   shared_preferences: ^2.2.2
+  flutter_native_splash: ^2.4.6
 
 dev_dependencies:
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
   flutter_test:
     sdk: flutter
 
@@ -29,4 +31,17 @@ flutter:
     - assets/types/
     - assets/icons/
     - assets/images/
-    - assets/images/magikarp.png
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/Loader.png"
+  min_sdk_android: 21
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/icons/icon_splash.png
+  android_12:
+    image: assets/icons/icon_splash.png
+    icon_background_color: "#FFFFFF"
+  web: false

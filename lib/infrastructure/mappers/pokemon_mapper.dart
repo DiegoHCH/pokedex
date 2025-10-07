@@ -11,19 +11,19 @@ class PokemonMapper {
   }) {
     return Pokemon(
       ability: _getAbilityName(abilityData),
-      baseExperience: pokemonData.baseExperience ?? 0,
-      height: pokemonData.height ?? 0,
-      name: pokemonData.name ?? '',
-      order: pokemonData.order ?? 0,
-      sprite: pokemonData.sprites?.frontDefault ?? '',
-      stats: _mapStats(pokemonData.stats ?? []),
+      baseExperience: pokemonData.baseExperience,
+      height: pokemonData.height,
+      name: pokemonData.name,
+      order: pokemonData.order,
+      sprite: pokemonData.sprites.frontDefault,
+      stats: _mapStats(pokemonData.stats),
       types: _mapTypesFromTypeData(typeData),
-      weight: pokemonData.weight ?? 0,
+      weight: pokemonData.weight,
       description: _getDescription(speciesData),
       weaknesses: _mapWeaknesses(typeData),
       category: _getCategory(speciesData),
-      genderRate: speciesData.genderRate ?? -1, 
-      animation: pokemonData.sprites?.other?.showdown.frontDefault ?? '',
+      genderRate: speciesData.genderRate, 
+      animation: pokemonData.sprites.other?.showdown.frontDefault ?? '',
     );
   }
 
@@ -70,7 +70,7 @@ class PokemonMapper {
       
       // Si no encontró en español, usar el nombre en inglés como fallback
       if (!foundSpanish) {
-        types.add(type.name ?? 'unknown');
+        types.add(type.name);
       }
     }
     
@@ -93,12 +93,12 @@ class PokemonMapper {
     final Map<String, List<String>> weaknesses = {};
     
     for (var type in typeData) {
-      final typeName = type.name ?? 'unknown';
+      final typeName = type.name;
       final damageRelations = type.damageRelations;
       
-      if (damageRelations != null && damageRelations.doubleDamageFrom.isNotEmpty) {
+      if (damageRelations.doubleDamageFrom.isNotEmpty) {
         final doubleDamageFrom = damageRelations.doubleDamageFrom
-            .map((type) => type.name ?? 'unknown')
+            .map((type) => type.name)
             .toList();
         
         weaknesses[typeName] = doubleDamageFrom;
