@@ -13,6 +13,7 @@ class Pokemon {
   final Map<String, List<String>> weaknesses;
   final String category;
   final int genderRate;
+  final String animation;
 
   Pokemon({
         required this.ability,
@@ -28,5 +29,6 @@ class Pokemon {
         required this.weaknesses,
         required this.category,
         required this.genderRate,
+        required this.animation,
     });
 }

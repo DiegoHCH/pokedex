@@ -11,18 +11,19 @@ class PokemonMapper {
   }) {
     return Pokemon(
       ability: _getAbilityName(abilityData),
-      baseExperience: pokemonData.baseExperience,
-      height: pokemonData.height,
-      name: pokemonData.name,
-      order: pokemonData.order,
-      sprite: pokemonData.sprites.frontDefault,
-      stats: _mapStats(pokemonData.stats),
+      baseExperience: pokemonData.baseExperience ?? 0,
+      height: pokemonData.height ?? 0,
+      name: pokemonData.name ?? '',
+      order: pokemonData.order ?? 0,
+      sprite: pokemonData.sprites?.frontDefault ?? '',
+      stats: _mapStats(pokemonData.stats ?? []),
       types: _mapTypesFromTypeData(typeData),
-      weight: pokemonData.weight,
+      weight: pokemonData.weight ?? 0,
       description: _getDescription(speciesData),
       weaknesses: _mapWeaknesses(typeData),
       category: _getCategory(speciesData),
-      genderRate: speciesData.genderRate,
+      genderRate: speciesData.genderRate ?? -1, 
+      animation: pokemonData.sprites?.other?.showdown.frontDefault ?? '',
     );
   }
 
@@ -54,18 +55,22 @@ class PokemonMapper {
     final List<String> types = [];
     
     for (var type in typeData) {
+      bool foundSpanish = false;
+      
       if (type.names.isNotEmpty) {
         // Buscar nombre en español
         for (var name in type.names) {
           if (name.language.name == 'es') {
             types.add(name.name);
+            foundSpanish = true;
             break;
           }
         }
-        // Si no hay en español, tomar el nombre en inglés
-        if (types.isEmpty || types.last != type.name) {
-          types.add(type.name);
-        }
+      }
+      
+      // Si no encontró en español, usar el nombre en inglés como fallback
+      if (!foundSpanish) {
+        types.add(type.name ?? 'unknown');
       }
     }
     
@@ -88,15 +93,17 @@ class PokemonMapper {
     final Map<String, List<String>> weaknesses = {};
     
     for (var type in typeData) {
-      final typeName = type.name;
+      final typeName = type.name ?? 'unknown';
       final damageRelations = type.damageRelations;
       
-      final doubleDamageFrom = damageRelations.doubleDamageFrom
-          .map((type) => type.name)
-          .toList();
-      
-      if (doubleDamageFrom.isNotEmpty) {
+      if (damageRelations != null && damageRelations.doubleDamageFrom.isNotEmpty) {
+        final doubleDamageFrom = damageRelations.doubleDamageFrom
+            .map((type) => type.name ?? 'unknown')
+            .toList();
+        
         weaknesses[typeName] = doubleDamageFrom;
+      } else {
+        weaknesses[typeName] = [];
       }
     }
     
@@ -107,7 +114,8 @@ class PokemonMapper {
     if (speciesData.genera.isNotEmpty) {
       for (var genus in speciesData.genera) {
         if (genus.language.name == 'es') {
-          return genus.genus;
+          // Eliminar la palabra "Pokémon" de la categoría
+          return genus.genus.replaceAll('Pokémon', '').trim();
         }
       }
     }

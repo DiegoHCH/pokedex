@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:pokemon_2025/domain/domain.dart';
 import 'package:pokemon_2025/infrastructure/infrastructure.dart' hide Pokemon;
 import 'package:pokemon_2025/infrastructure/mappers/pokemon_mapper.dart';
@@ -17,22 +16,25 @@ class PokepiDatasource implements PokemonsDatasource {
     });
     final PokemonListResponse listResponse = PokemonListResponse.fromJson(response.data);
     
-    debugPrint('Total count: ${listResponse.count}');
-    debugPrint('Next page: ${listResponse.next}');
-    
     // Extraer nombres de Pokémon de la lista
     final List<String> pokemonNames = listResponse.results.map((result) => result.name).toList();
     
-    debugPrint('Pokemon names: $pokemonNames');
-    
-    // Usar getPokemonByName para cada Pokémon
-    final List<Future<Pokemon>> pokemonFutures = pokemonNames.map((name) async {
-      return await getPokemonByName(name);
+    // Usar getPokemonByName para cada Pokémon con manejo de errores
+    final List<Future<Pokemon?>> pokemonFutures = pokemonNames.map((name) async {
+      try {
+        return await getPokemonByName(name);
+      } catch (e) {
+        return null; // Retornar null si hay error
+      }
     }).toList();
     
-    final List<Pokemon> pokemons = await Future.wait(pokemonFutures);
+    final List<Pokemon?> pokemonResults = await Future.wait(pokemonFutures);
     
-    debugPrint('Pokemons loaded: ${pokemons.length}');
+    // Filtrar los Pokémon que se cargaron exitosamente
+    final List<Pokemon> pokemons = pokemonResults
+        .where((pokemon) => pokemon != null)
+        .cast<Pokemon>()
+        .toList();
     
     return pokemons;
   }
@@ -67,12 +69,6 @@ class PokepiDatasource implements PokemonsDatasource {
     }).toList();
     
     final List<PokemonTypeResponse> typeData = await Future.wait(typeFutures);
-    
-    debugPrint('Pokemon Name: $name');
-    debugPrint('Pokemon Name: ${pokemonData.name}');
-    debugPrint('Ability data: ${abilityData != null ? "Found" : "Not found"}');
-    debugPrint('Species data: Found');
-    debugPrint('Type data: ${typeData.length}');
     
     // Mapear los datos usando el mapper
     final mappedPokemon = PokemonMapper.toEntity(

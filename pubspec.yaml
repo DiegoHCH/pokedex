@@ -7,11 +7,14 @@ environment:
   sdk: ^3.7.2
 
 dependencies:
+  animate_do: ^4.2.0
   dio: ^5.9.0
   flutter:
     sdk: flutter
   flutter_riverpod: ^3.0.1
   go_router: ^16.2.4
+  google_fonts: ^6.2.1
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_lints: ^5.0.0
@@ -20,3 +23,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/elements/
+    - assets/types/
+    - assets/icons/
+    - assets/images/
+    - assets/images/magikarp.png

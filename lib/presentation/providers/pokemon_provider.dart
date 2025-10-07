@@ -4,6 +4,7 @@ import 'pokemons_repository_provider.dart';
 
 class PokemonNotifier extends Notifier<AsyncValue<List<Pokemon>>> {
   late final PokemonsRepository _repository;
+  bool _isLoadingMore = false;
 
   @override
   AsyncValue<List<Pokemon>> build() {
@@ -23,16 +24,27 @@ class PokemonNotifier extends Notifier<AsyncValue<List<Pokemon>>> {
   }
 
   Future<void> loadMorePokemons({int limit = 20}) async {
-    if (state.hasValue) {
+    if (state.hasValue && !_isLoadingMore) {
+      _isLoadingMore = true;
       final currentPokemons = state.value!;
       final offset = currentPokemons.length;
       
       try {
         final newPokemons = await _repository.getPokemons(limit: limit, offset: offset);
-        final allPokemons = [...currentPokemons, ...newPokemons];
-        state = AsyncValue.data(allPokemons);
-      } catch (error, stackTrace) {
-        state = AsyncValue.error(error, stackTrace);
+        if (newPokemons.isNotEmpty) {
+          // Filtrar duplicados basándose en el order del Pokémon
+          final existingOrders = currentPokemons.map((p) => p.order).toSet();
+          final uniqueNewPokemons = newPokemons.where((p) => !existingOrders.contains(p.order)).toList();
+          
+          if (uniqueNewPokemons.isNotEmpty) {
+            final allPokemons = [...currentPokemons, ...uniqueNewPokemons];
+            state = AsyncValue.data(allPokemons);
+          }
+        }
+      } catch (error) {
+        // Silently handle error for load more operation
+      } finally {
+        _isLoadingMore = false;
       }
     }
   }
@@ -41,8 +53,49 @@ class PokemonNotifier extends Notifier<AsyncValue<List<Pokemon>>> {
     state = const AsyncValue.loading();
     
     try {
+      // Primero buscar en la lista actual de Pokémon
+      if (state.hasValue) {
+        final currentPokemons = state.value!;
+        final foundPokemon = currentPokemons.where((pokemon) => 
+          pokemon.name.toLowerCase().contains(name.toLowerCase())
+        ).toList();
+        
+        if (foundPokemon.isNotEmpty) {
+          state = AsyncValue.data(foundPokemon);
+          return;
+        }
+      }
+      
+      // Si no se encuentra en la lista actual, buscar por nombre exacto usando el endpoint
       final pokemon = await _repository.getPokemonByName(name);
       state = AsyncValue.data([pokemon]);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+
+  Future<void> filterPokemonsByTypes(Set<String> selectedTypes) async {
+    if (selectedTypes.isEmpty) {
+      // Si no hay filtros, cargar lista normal
+      await loadPokemons();
+      return;
+    }
+
+    state = const AsyncValue.loading();
+    
+    try {
+      // Cargar todos los Pokémon primero
+      final allPokemons = await _repository.getPokemons(limit: 1000, offset: 0);
+      
+      // Filtrar por tipos seleccionados
+      final filteredPokemons = allPokemons.where((pokemon) {
+        
+        final hasMatchingType = pokemon.types.any((type) => selectedTypes.contains(type));
+        
+        return hasMatchingType;
+      }).toList();
+      
+      state = AsyncValue.data(filteredPokemons);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
     }
@@ -55,6 +108,8 @@ class PokemonNotifier extends Notifier<AsyncValue<List<Pokemon>>> {
   void refresh() {
     loadPokemons();
   }
+
+  bool get isLoadingMore => _isLoadingMore;
 }
 
 final pokemonProvider = NotifierProvider<PokemonNotifier, AsyncValue<List<Pokemon>>>(() {
